@@ -3,6 +3,8 @@
  **/
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'todo.dart';
+import 'package:english_words/english_words.dart';
 
 void main() => runApp(DemoApp());
 
@@ -13,14 +15,120 @@ class DemoApp extends StatelessWidget{
     // TODO: implement build
     return MaterialApp(
       title: 'Flutter Demo By Koller',
-      home: Scaffold(
+        theme: new ThemeData(
+          primaryColor: Colors.green
+        ),
+      home: RandomWidget(),
+    );
+  }
+
+}
+
+class RandomWidget extends StatefulWidget{
+  @override
+  State<StatefulWidget> createState() => RandomStates();
+
+}
+
+class RandomStates extends State<RandomWidget>
+{
+  final _suggestion = <WordPair>[];
+
+  final _saved = new Set<WordPair>();
+
+  final _biggerFont = const TextStyle(fontSize: 18.0);
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+//    final wordPair = new WordPair.random();
+    return Scaffold(
         appBar: AppBar(
-          title: Text("Home appBar title"),
+          title: Text("Startup Name Generato"),
+          actions: <Widget>[
+            new IconButton(icon: new Icon(Icons.list),onPressed: _ActionOnPress,)
+          ],
         ),
         body: Center(
-          child: RollingButton(),
+          child:  _buildSuggestions(),
         )
+    );
+  }
+
+
+  Widget _buildSuggestions(){
+    return new ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemBuilder: (context,i){
+        if(i.isOdd) return new Divider();
+
+        final index = i ~/ 2;
+
+        if(index >= _suggestion.length)
+          {
+            _suggestion.addAll(generateWordPairs().take(10));
+          }
+
+          return _buildRow(_suggestion[index]);
+      }
+    );
+  }
+
+  Widget _buildRow(WordPair wordPair)
+  {
+    final alreadySaved = _saved.contains(wordPair);
+
+    return new ListTile(
+      title: new Text(
+        wordPair.asCamelCase,
+        style: _biggerFont,
       ),
+      trailing: new Icon(
+        alreadySaved ? Icons.favorite : Icons.favorite_border,
+        color: alreadySaved ? Colors.red : Colors.black,
+      ),
+      onTap: (){
+        setState(() {
+          if(alreadySaved)
+            {
+              _saved.remove(wordPair);
+            }else{
+            _saved.add(wordPair);
+          }
+        });
+      },
+    );
+  }
+
+  void _ActionOnPress()
+  {
+    Navigator.of(context).push(
+        new MaterialPageRoute(
+            builder: (context){
+              final tiles = _saved.map(
+                  (pair){
+                    return new ListTile(
+                      title: new Text(
+                        pair.asCamelCase,
+                        style: _biggerFont,
+                      ),
+                    );
+                  });
+
+              final divided = ListTile.divideTiles(
+                context: context,
+                tiles: tiles,
+              )
+              .toList();
+
+              return new Scaffold(
+                appBar: new AppBar(
+                  title: new Text('Save Suggestions'),
+                ),
+                body: new ListView(children: divided,),
+              );
+            }
+        )
     );
   }
 
@@ -37,11 +145,12 @@ class RollingButton extends StatefulWidget
 
 class _RollingState extends State<RollingButton>
 {
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
     return RaisedButton(
-      child: Text("RaiseButton"),
+      child: Text(new WordPair.random().asCamelCase),
       onPressed: _onPressed,
     );
   }
@@ -56,17 +165,17 @@ class _RollingState extends State<RollingButton>
 
   List<int> _roll()
   {
-    final roll_first = _random.nextInt(6);
-    final roll_second = _random.nextInt(6);
+    assert (_random != null);
+    final roll_first = _random.nextInt(10);
+    final roll_second = _random.nextInt(50);
     return [roll_first,roll_second];
   }
 
-//
-//  int _Test(int x ,int y)
-//  {
-//    return x + y;
-//  }
-
+  @Todo("kevin","play game")
+  int _Test(int x ,int y)
+  {
+    return x + y;
+  }
 
    _onPressed(){
     debugPrint('_RollingState._onPressed');
@@ -77,13 +186,13 @@ class _RollingState extends State<RollingButton>
         builder: (_){
           return AlertDialog(
               content: Text("first AlertDialog"
-                  "....Roll Result：(${rollResults[0]},${rollResults[1]})")
+                  "....Roll Result：(${rollResults[0]},${rollResults[1]})"
+              ".....Sum is :(${_Test(rollResults[0],rollResults[1])})")
           );
         }
     );
   }
 }
-
 
 
 
